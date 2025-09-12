@@ -1,6 +1,6 @@
 WITH time_range AS (
     SELECT 
-        TO_DATE('2025-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AS start_time,
+        TO_DATE('2025-09-11 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AS start_time,
         TO_DATE('2025-09-12 23:59:59', 'YYYY-MM-DD HH24:MI:SS') AS end_time
     FROM DUAL
 )
@@ -11,8 +11,8 @@ SELECT
     d.STOCK_CODE AS 股票代码,
     d.STOCK_NAME AS 股票名称,
     CASE 
-        WHEN d.ENTRUST_DIRECTION = 1 THEN '买入'
-        WHEN d.ENTRUST_DIRECTION = 2 THEN '卖出'
+        WHEN d.ENTRUST_DIRECTION = 1 THEN '卖'
+        WHEN d.ENTRUST_DIRECTION = 2 THEN '买'
         ELSE '未知'
     END AS 委托方向,
     SUM(d.AMOUNT * d.PRICE) AS 成交总金额
