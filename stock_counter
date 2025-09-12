@@ -13,3 +13,61 @@ SELECT * FROM (
     ORDER BY 买入成交总金额 DESC
 )
 WHERE ROWNUM <= 100;
+
+
+
+//大户买入
+SELECT * FROM (
+    WITH stock_buy_summary AS (
+        -- 统计每个股票的买入总金额
+        SELECT 
+            STOCK_CODE,
+            STOCK_NAME,
+            SUM(AMOUNT * PRICE) AS 股票买入总金额
+        FROM T_DEAL
+        WHERE TRUNC(DEAL_TIME) = TRUNC(SYSDATE)  -- 当天
+          AND ENTRUST_DIRECTION = 2  -- 2代表买入
+        GROUP BY STOCK_CODE, STOCK_NAME
+    ),
+    user_stock_buy AS (
+        -- 统计每个用户对每个股票的买入金额和平均价格
+        SELECT 
+            d.STOCK_CODE,
+            d.STOCK_NAME,
+            d.USERID,
+            u.NAME,
+            u.TEL,
+            u.ID AS USER_ID,
+            SUM(d.AMOUNT * d.PRICE) AS 用户买入金额,
+            ROUND(AVG(d.PRICE), 2) AS 用户平均买入价,
+            ROW_NUMBER() OVER (PARTITION BY d.STOCK_CODE ORDER BY SUM(d.AMOUNT * d.PRICE) DESC) AS rn
+        FROM T_DEAL d
+        JOIN T_USER u ON u.ID = d.USERID
+        WHERE TRUNC(d.DEAL_TIME) = TRUNC(SYSDATE)  -- 当天
+          AND d.ENTRUST_DIRECTION = 2  -- 2代表买入
+        GROUP BY d.STOCK_CODE, d.STOCK_NAME, d.USERID, u.NAME, u.TEL, u.ID
+    ),
+    top_stocks AS (
+        -- 选出买入金额最大的100个股票
+        SELECT 
+            STOCK_CODE,
+            STOCK_NAME,
+            股票买入总金额,
+            ROW_NUMBER() OVER (ORDER BY 股票买入总金额 DESC) AS stock_rank
+        FROM stock_buy_summary
+    )
+    SELECT 
+        ts.stock_rank AS 排名,
+        ts.STOCK_CODE AS 股票代码,
+        ts.STOCK_NAME AS 股票名称,
+        ts.股票买入总金额,
+        usb.USER_ID AS 最大买入用户ID,
+        usb.NAME AS 最大买入用户姓名,
+        usb.TEL AS 最大买入用户电话,
+        usb.用户买入金额 AS 该用户买入金额,
+        usb.用户平均买入价 AS 该用户平均买入价
+    FROM top_stocks ts
+    JOIN user_stock_buy usb ON ts.STOCK_CODE = usb.STOCK_CODE AND usb.rn = 1
+    WHERE ts.stock_rank <= 100
+    ORDER BY ts.股票买入总金额 DESC
+);
