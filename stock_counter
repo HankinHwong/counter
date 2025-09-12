@@ -1,0 +1,15 @@
+SELECT * FROM (
+    SELECT 
+        STOCK_CODE AS 股票代码,
+        STOCK_NAME AS 股票名称,
+        SUM(AMOUNT * PRICE) AS 买入成交总金额,
+        COUNT(*) AS 买入成交笔数,
+        SUM(AMOUNT) AS 买入总数量,
+        AVG(PRICE) AS 平均买入价格
+    FROM T_DEAL
+    WHERE TRUNC(DEAL_TIME) = TRUNC(SYSDATE)  -- 当天
+      AND ENTRUST_DIRECTION = 2  -- 2代表买入
+    GROUP BY STOCK_CODE, STOCK_NAME
+    ORDER BY 买入成交总金额 DESC
+)
+WHERE ROWNUM <= 100;
