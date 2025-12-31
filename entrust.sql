@@ -3,7 +3,7 @@
 -- =====================================================
 
 -- =====================================================
--- 基于T_DEAL表的查询
+-- 基于T_DEAL表的查询 - 1：买入（BUY）- 2：卖出（SELL）
 -- =====================================================
 
 -- 1. 多用户股票成交统计
@@ -21,8 +21,8 @@ SELECT
     d.STOCK_CODE AS stock_code, 
     d.STOCK_NAME AS stock_name, 
     CASE 
-        WHEN d.ENTRUST_DIRECTION = 1 THEN 'SELL' 
-        WHEN d.ENTRUST_DIRECTION = 2 THEN 'BUY' 
+        WHEN d.ENTRUST_DIRECTION = 1 THEN 'BUY' 
+        WHEN d.ENTRUST_DIRECTION = 2 THEN 'SELL' 
         ELSE 'UNKNOWN' 
     END AS entrust_direction, 
     SUM(d.AMOUNT * d.PRICE) AS total_deal_amount 
